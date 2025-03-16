@@ -6,9 +6,18 @@ import io
 import base64
 import os
 
-# API for generating a graph of cancer trend
+# Paths for datasets
+incidence_mortality = "CDiA-2024-Book-7-Cancer-incidence-and-mortality-by-state-and-territory.xlsx"
+loc = "australian_postcodes.csv"
+
+# Read the datasets
+incidence = pd.read_excel(incidence_mortality, sheet_name="Table S7.1", skiprows=5)
+mortality = pd.read_excel(incidence_mortality, sheet_name="Table S7.2", skiprows=5)
+location = pd.read_csv(loc)
+
+# Set up Flask
 app = Flask(__name__)
-API_KEY = '326794b80b8b58850444e1f71007347d'
+API_KEY = os.getenv("API_KEY", '326794b80b8b58850444e1f71007347d') # Get the API key from the environment variable on Render
 
 def get_uv_index(lat, lon):
     url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=hourly,daily&appid={API_KEY}"
