@@ -137,7 +137,3 @@ def skin_cancer_trends():
         "age_bucket": age_bucket,
         "chart": f"data:image/png;base64, {img_base64}"
     })
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))
-    app.run(debug=True, host='0.0.0.0', port=port)
