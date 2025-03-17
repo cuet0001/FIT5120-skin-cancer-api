@@ -1,5 +1,10 @@
 import os
-print("PORT:", os.environ.get("PORT"))
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+logger.info(f"PORT: {os.environ.get('PORT')}")
 
 from flask import Flask, make_response
 import pandas as pd
