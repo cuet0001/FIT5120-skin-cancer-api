@@ -1,4 +1,6 @@
 import os
+print("PORT:", os.environ.get("PORT"))
+
 from flask import Flask, make_response
 import pandas as pd
 import folium
