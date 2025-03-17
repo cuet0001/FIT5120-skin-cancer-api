@@ -2,11 +2,10 @@ import pandas as pd
 import os
 
 # Paths for datasets
-DATA_DIR = "/content/drive/MyDrive/FIT5122-Onboarding_UserStory1.2"
-incidence_mortality = os.path.join(DATA_DIR, "CDiA-2024-Book-7-Cancer-incidence-and-mortality-by-state-and-territory.xlsx")
-loc = os.path.join(DATA_DIR, "australian_postcodes.csv")
-age_std_incidence = os.path.join(DATA_DIR, "CDiA-2024-Book-1a-Cancer-incidence-age-standardised-rates-5-year-age-groups.xlsx")
-age_std_mortality = os.path.join(DATA_DIR, "CDiA-2024-Book-2a-Cancer-mortality-and-age-standardised-rates-by-age-5-year-groups.xlsx")
+incidence_mortality = "dataset/CDiA-2024-Book-7-Cancer-incidence-and-mortality-by-state-and-territory.xlsx"
+loc = "dataset/australian_postcodes.csv"
+age_std_incidence = "dataset/CDiA-2024-Book-1a-Cancer-incidence-age-standardised-rates-5-year-age-groups.xlsx"
+age_std_mortality = "dataset/CDiA-2024-Book-2a-Cancer-mortality-and-age-standardised-rates-by-age-5-year-groups.xlsx"
 
 # Read datasets
 def load_datasets():
