@@ -5,8 +5,14 @@ import folium
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
+from utils import load_datasets, load_uv_data, process_uv_data  # Import utils.py
 
 app = Flask(__name__)
+
+# Load the data
+incidence, mortality, location, age_incidence, age_mortality = load_datasets()
+uv_data = load_uv_data()
+state_map_data = process_uv_data(uv_data, location)
 
 
 # ============================================
@@ -21,6 +27,7 @@ def generate_popup_chart(state):
     mort_state = mort_state[mort_state["Year"].between(2015, 2020)]
     inc_pivot = inc_state.pivot_table(index="Year", columns="Sex", values="Count", aggfunc="sum")
     mort_pivot = mort_state.pivot_table(index="Year", columns="Sex", values="Count", aggfunc="sum")
+
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(4,4), sharex=True)
     for sex in inc_pivot.columns:
         ax1.plot(inc_pivot.index, inc_pivot[sex], marker="o", label=sex)
@@ -33,6 +40,7 @@ def generate_popup_chart(state):
     ax2.set_xlabel("Year")
     ax2.set_ylabel("Count")
     ax2.legend(fontsize=8)
+
     plt.tight_layout()
     buf = BytesIO()
     plt.savefig(buf, format="png", dpi=100)
@@ -44,29 +52,6 @@ def generate_popup_chart(state):
 # ============================================
 # Prepare UV Data and Location Coordinates for Map
 # ============================================
-city_to_state = {
-    "sydney": "NSW",
-    "newcastle": "NSW",
-    "melbourne": "VIC",
-    "brisbane": "QLD",
-    "gold_coast": "QLD",
-    "townsville": "QLD",
-    "emerald": "QLD",
-    "perth": "WA",
-    "adelaide": "SA",
-    "kingston": "TAS",
-    "canberra": "ACT",
-    "darwin": "NT",
-    "alice_springs": "NT"
-}
-uv_records = []
-for city, df in uv_data.items():
-    avg_uv = pd.to_numeric(df["UV_Index"], errors="coerce").mean()
-    uv_records.append({"city": city, "state": city_to_state.get(city, None), "avg_uv_index": avg_uv})
-uv_df = pd.DataFrame(uv_records).dropna(subset=["state"])
-state_uv = uv_df.groupby("state")["avg_uv_index"].mean().reset_index()
-representative_coords = location.groupby("state")[["lat", "long"]].mean().reset_index().rename(columns={"lat": "mean_lat", "long": "mean_long"})
-state_map_data = pd.merge(state_uv, representative_coords, on="state", how="inner")
 
 m = folium.Map(location=[-25, 133], zoom_start=4)
 for _, row in state_map_data.iterrows():
@@ -76,11 +61,12 @@ for _, row in state_map_data.iterrows():
     except Exception as e:
         img_base64 = ""
         print(f"Error generating chart for {state}: {e}")
-    popup_html = f\"\"\"
+
+    popup_html = f"""
     <b>{state}</b><br>
     Average UV Index (2023): {row['avg_uv_index']:.2f}<br>
     {f'<img src="data:image/png;base64,{img_base64}" width="300">' if img_base64 else '<i>No recent data available</i>'}
-    \"\"\"
+    """
     folium.CircleMarker(
         location=[row["mean_lat"], row["mean_long"]],
         radius=row["avg_uv_index"] * 10,
@@ -89,6 +75,7 @@ for _, row in state_map_data.iterrows():
         fill=True,
         fill_opacity=0.7
     ).add_to(m)
+
 map_html = m._repr_html_()
 
 @app.route('/api/uv_index_by_location', methods=['GET'])

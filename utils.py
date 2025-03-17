@@ -1,13 +1,16 @@
 import pandas as pd
 import os
 
-# Paths for datasets
-incidence_mortality = "dataset/CDiA-2024-Book-7-Cancer-incidence-and-mortality-by-state-and-territory.xlsx"
-loc = "dataset/australian_postcodes.csv"
-age_std_incidence = "dataset/CDiA-2024-Book-1a-Cancer-incidence-age-standardised-rates-5-year-age-groups.xlsx"
-age_std_mortality = "dataset/CDiA-2024-Book-2a-Cancer-mortality-and-age-standardised-rates-by-age-5-year-groups.xlsx"
+# Base directory for datasets
+DATA_DIR = "dataset"
 
-# Read datasets
+# Paths for datasets
+incidence_mortality = os.path.join(DATA_DIR, "CDiA-2024-Book-7-Cancer-incidence-and-mortality-by-state-and-territory.xlsx")
+loc = os.path.join(DATA_DIR, "australian_postcodes.csv")
+age_std_incidence = os.path.join(DATA_DIR, "CDiA-2024-Book-1a-Cancer-incidence-age-standardised-rates-5-year-age-groups.xlsx")
+age_std_mortality = os.path.join(DATA_DIR, "CDiA-2024-Book-2a-Cancer-mortality-and-age-standardised-rates-by-age-5-year-groups.xlsx")
+
+# Load datasets
 def load_datasets():
     incidence = pd.read_excel(incidence_mortality, sheet_name="Table S7.1", skiprows=5)
     mortality = pd.read_excel(incidence_mortality, sheet_name="Table S7.2", skiprows=5)
@@ -33,7 +36,7 @@ city_paths = {
     "alice_springs": os.path.join(DATA_DIR, "uv_index_data/uv-alice-springs-2023.csv")
 }
 
-# Read UV datasets
+# Load UV datasets
 def load_uv_data():
     return {city: pd.read_csv(path) for city, path in city_paths.items()}
 
@@ -55,26 +58,18 @@ def standardize_state_names(df, column):
 
 # Recategorize age groups
 def recategorise_age(age_group):
-    if age_group in ["00–04", "05–09"]:
-        return "0-9"
-    elif age_group in ["10–14", "15–19"]:
-        return "10-19"
-    elif age_group in ["20–24", "25–29"]:
-        return "20-29"
-    elif age_group in ["30–34", "35–39"]:
-        return "30-39"
-    elif age_group in ["40–44", "45–49"]:
-        return "40-49"
-    elif age_group in ["50–54", "55–59"]:
-        return "50-59"
-    elif age_group in ["60–64", "65–69"]:
-        return "60-69"
-    elif age_group in ["70–74", "75–79"]:
-        return "70-79"
-    elif age_group in ["80–84", "85–89", "90+"]:
-        return "80+"
-    else:
-        return age_group
+    categories = {
+        "00–04": "0-9", "05–09": "0-9",
+        "10–14": "10-19", "15–19": "10-19",
+        "20–24": "20-29", "25–29": "20-29",
+        "30–34": "30-39", "35–39": "30-39",
+        "40–44": "40-49", "45–49": "40-49",
+        "50–54": "50-59", "55–59": "50-59",
+        "60–64": "60-69", "65–69": "60-69",
+        "70–74": "70-79", "75–79": "70-79",
+        "80–84": "80+", "85–89": "80+", "90+": "80+"
+    }
+    return categories.get(age_group, age_group)
 
 # Aggregate age-based incidence/mortality
 def aggregate_age_data(df, count_col, rate_col):
@@ -117,3 +112,12 @@ def process_uv_data(uv_data, location):
     representative_coords.rename(columns={"lat": "mean_lat", "long": "mean_long"}, inplace=True)
     
     return pd.merge(state_uv, representative_coords, on="state", how="inner")
+
+# Export functions for app.py
+__all__ = [
+    "load_datasets",
+    "load_uv_data",
+    "standardize_state_names",
+    "aggregate_age_data",
+    "process_uv_data"
+]
