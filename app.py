@@ -128,7 +128,7 @@ def uv_index_by_location():
 
 @app.route('/api/skin_cancer_trends', methods=['GET'])
 def skin_cancer_trends():
-    age_bucket = request.args.get("age_bucket", "30-39")  # デフォルトは "30-39"
+    age_bucket = request.args.get("age_bucket", "30-39")
     if age_bucket not in incidence_age["Age Category"].unique():
         return jsonify({"error": "Invalid age group"}), 400
 
@@ -139,5 +139,5 @@ def skin_cancer_trends():
     })
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))
     app.run(debug=True, host='0.0.0.0', port=port)
