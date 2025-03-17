@@ -9,6 +9,7 @@ incidence_mortality = os.path.join(DATA_DIR, "CDiA-2024-Book-7-Cancer-incidence-
 loc = os.path.join(DATA_DIR, "australian_postcodes.csv")
 age_std_incidence = os.path.join(DATA_DIR, "CDiA-2024-Book-1a-Cancer-incidence-age-standardised-rates-5-year-age-groups.xlsx")
 age_std_mortality = os.path.join(DATA_DIR, "CDiA-2024-Book-2a-Cancer-mortality-and-age-standardised-rates-by-age-5-year-groups.xlsx")
+temperature_data = os.path.join(DATA_DIR, "avg_annual_temperature.csv")
 
 # Load datasets
 def load_datasets():
@@ -19,25 +20,30 @@ def load_datasets():
     age_mortality = pd.read_excel(age_std_mortality, sheet_name="Table S2a.1", skiprows=5)
     return incidence, mortality, location, age_incidence, age_mortality
 
-# Define UV dataset paths
-city_paths = {
-    "sydney": os.path.join(DATA_DIR, "uv_index_data/uv-sydney-2023.csv"),
-    "newcastle": os.path.join(DATA_DIR, "uv_index_data/uv-newcastle-2023.csv"),
-    "melbourne": os.path.join(DATA_DIR, "uv_index_data/uv-melbourne-2023.csv"),
-    "brisbane": os.path.join(DATA_DIR, "uv_index_data/uv-brisbane-2023.csv"),
-    "gold_coast": os.path.join(DATA_DIR, "uv_index_data/uv-gold-coast-2023.csv"),
-    "townsville": os.path.join(DATA_DIR, "uv_index_data/uv-townsville-2023.csv"),
-    "emerald": os.path.join(DATA_DIR, "uv_index_data/uv-emerald-2023.csv"),
-    "perth": os.path.join(DATA_DIR, "uv_index_data/uv-perth-2023.csv"),
-    "adelaide": os.path.join(DATA_DIR, "uv_index_data/uv-adelaide-2023.csv"),
-    "kingston": os.path.join(DATA_DIR, "uv_index_data/uv-kingston-2023.csv"),
-    "canberra": os.path.join(DATA_DIR, "uv_index_data/uv-canberra-2023.csv"),
-    "darwin": os.path.join(DATA_DIR, "uv_index_data/uv-darwin-2023.csv"),
-    "alice_springs": os.path.join(DATA_DIR, "uv_index_data/uv-alice-springs-2023.csv")
-}
+# Load temperature dataset
+def load_temperature_data():
+    temp_df = pd.read_csv(temperature_data)
+    national_temp = temp_df.groupby("year")["avg_annual_temp_celsius"].mean().reset_index()
+    return national_temp
 
 # Load UV datasets
 def load_uv_data():
+    # Define UV dataset paths
+    city_paths = {
+        "sydney": os.path.join(DATA_DIR, "uv_index_data/uv-sydney-2023.csv"),
+        "newcastle": os.path.join(DATA_DIR, "uv_index_data/uv-newcastle-2023.csv"),
+        "melbourne": os.path.join(DATA_DIR, "uv_index_data/uv-melbourne-2023.csv"),
+        "brisbane": os.path.join(DATA_DIR, "uv_index_data/uv-brisbane-2023.csv"),
+        "gold_coast": os.path.join(DATA_DIR, "uv_index_data/uv-gold-coast-2023.csv"),
+        "townsville": os.path.join(DATA_DIR, "uv_index_data/uv-townsville-2023.csv"),
+        "emerald": os.path.join(DATA_DIR, "uv_index_data/uv-emerald-2023.csv"),
+        "perth": os.path.join(DATA_DIR, "uv_index_data/uv-perth-2023.csv"),
+        "adelaide": os.path.join(DATA_DIR, "uv_index_data/uv-adelaide-2023.csv"),
+        "kingston": os.path.join(DATA_DIR, "uv_index_data/uv-kingston-2023.csv"),
+        "canberra": os.path.join(DATA_DIR, "uv_index_data/uv-canberra-2023.csv"),
+        "darwin": os.path.join(DATA_DIR, "uv_index_data/uv-darwin-2023.csv"),
+        "alice_springs": os.path.join(DATA_DIR, "uv_index_data/uv-alice-springs-2023.csv")
+    }
     return {city: pd.read_csv(path) for city, path in city_paths.items()}
 
 # State name mapping

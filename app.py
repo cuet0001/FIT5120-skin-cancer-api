@@ -5,7 +5,7 @@ import folium
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
-from utils import load_datasets, load_uv_data, process_uv_data  # Import utils.py
+from utils import load_datasets, load_uv_data, load_temperature_data, process_uv_data  # Import utils.py
 
 app = Flask(__name__)
 
@@ -13,7 +13,12 @@ app = Flask(__name__)
 incidence, mortality, location, age_incidence, age_mortality = load_datasets()
 uv_data = load_uv_data()
 state_map_data = process_uv_data(uv_data, location)
+national_temp = load_temperature_data()
 
+# Aggregate age-specific incidence data
+incidence_age = age_incidence.groupby(["Year", "Age Category"]).agg(
+    avg_rate=("avg_age_specific_rate", "mean")
+).reset_index()
 
 # ============================================
 # Function to Generate Popup Chart (2015-2020, by Sex, using Count)
@@ -78,9 +83,60 @@ for _, row in state_map_data.iterrows():
 
 map_html = m._repr_html_()
 
+# ============================================
+# Function to Generate Temperature & Incidence Chart
+# ============================================
+def generate_skin_cancer_trends_chart(age_bucket):
+    # Filter incidence data for the selected age bucket
+    df_inc = incidence_age[incidence_age["Age Category"] == age_bucket]
+
+    # Create a figure with two subplots
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
+
+    # --- Top Subplot: Temperature Trend ---
+    ax1.plot(national_temp["year"], national_temp["avg_annual_temp_celsius"],
+             marker="o", color="orange", linewidth=2)
+    ax1.set_title("National Average Annual Temperature")
+    ax1.set_xlabel("Year")
+    ax1.set_ylabel("Temperature (°C)")
+
+    # --- Bottom Subplot: Incidence Trend ---
+    ax2.plot(df_inc["Year"], df_inc["avg_rate"],
+             marker="o", color="green", linewidth=2)
+    ax2.set_title(f"Skin Cancer Incidence Trend ({age_bucket})")
+    ax2.set_xlabel("Year")
+    ax2.set_ylabel("Incidence Rate (per 100,000)")
+
+    plt.tight_layout()
+
+    # Convert plot to Base64 for Flask response
+    buf = BytesIO()
+    plt.savefig(buf, format="png", dpi=100)
+    plt.close()
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+    return img_base64
+
+
+# ============================================
+# API Endpoints
+# ============================================
+
 @app.route('/api/uv_index_by_location', methods=['GET'])
 def uv_index_by_location():
     return make_response(map_html, 200)
+
+@app.route('/api/skin_cancer_trends', methods=['GET'])
+def skin_cancer_trends():
+    age_bucket = request.args.get("age_bucket", "30-39")  # デフォルトは "30-39"
+    if age_bucket not in incidence_age["Age Category"].unique():
+        return jsonify({"error": "Invalid age group"}), 400
+
+    img_base64 = generate_skin_cancer_trends_chart(age_bucket)
+    return jsonify({
+        "age_bucket": age_bucket,
+        "chart": f"data:image/png;base64, {img_base64}"
+    })
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
